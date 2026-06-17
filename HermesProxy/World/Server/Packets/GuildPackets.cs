@@ -21,6 +21,7 @@ using System.Text;
 using Framework.Constants;
 using Framework.GameMath;
 using Framework.IO;
+using HermesProxy.Enums;
 using HermesProxy.World.Enums;
 using HermesProxy.World.Objects;
 using System.Collections.Generic;
@@ -250,11 +251,18 @@ public class GuildRosterMemberData
         data.WriteUInt8((byte)ClassID);
         data.WriteUInt8((byte)SexID);
 
+        if (ModernVersion.Build == ClientVersionBuild.V3_4_3_54261)
+        {
+            data.WriteUInt64(GuildClubMemberID);
+            data.WriteUInt8(RaceID);
+        }
+
         data.WriteBits(Name.GetByteCount(), 6);
         data.WriteBits(Note.GetByteCount(), 8);
         data.WriteBits(OfficerNote.GetByteCount(), 8);
         data.WriteBit(Authenticated);
         data.WriteBit(SorEligible);
+        data.FlushBits();
 
         data.WriteString(Name);
         data.WriteString(Note);
@@ -278,6 +286,8 @@ public class GuildRosterMemberData
     public byte Level;
     public Class ClassID;
     public Gender SexID;
+    public ulong GuildClubMemberID;
+    public byte RaceID;
     public bool Authenticated;
     public bool SorEligible;
     public GuildRosterProfessionData[] Profession = new GuildRosterProfessionData[2];
