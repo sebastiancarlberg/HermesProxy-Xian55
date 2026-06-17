@@ -92,6 +92,22 @@ public partial class WorldClient
         SendPacketToClient(new Dismount());
     }
 
+    [PacketHandler(Opcode.SMSG_MOVE_SET_COLLISION_HGT)]
+    void HandleMoveSetCollisionHeight(WorldPacket packet)
+    {
+        MoveSetCollisionHeight height = new()
+        {
+            MoverGUID = packet.ReadPackedGuid().To128(GetSession().GameState),
+            SequenceIndex = packet.ReadUInt32(),
+            Height = packet.ReadFloat(),
+            Scale = 1.0f,
+            Reason = MoveSetCollisionHeight.UpdateCollisionHeightReason.Force,
+            MountDisplayID = 0,
+            ScaleDuration = 0,
+        };
+        SendPacketToClient(height);
+    }
+
     [PacketHandler(Opcode.SMSG_CONTROL_UPDATE)]
     void HandleControlUpdate(WorldPacket packet)
     {
