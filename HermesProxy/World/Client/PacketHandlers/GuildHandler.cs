@@ -254,6 +254,26 @@ public partial class WorldClient
         GetSession().GameState.CurrentGuildNumAccounts = packet.ReadUInt32();
     }
 
+    [PacketHandler(Opcode.MSG_GUILD_PERMISSIONS)]
+    void HandleGuildPermissions(WorldPacket packet)
+    {
+        GuildPermissionsQueryResults results = new();
+        results.RankID = packet.ReadUInt32();
+        results.Flags = packet.ReadInt32();
+        results.WithdrawGoldLimit = packet.ReadInt32();
+        results.NumTabs = packet.ReadUInt8();
+
+        for (var i = 0; i < GuildConst.MaxBankTabs && packet.CanRead(8); i++)
+        {
+            GuildPermissionsQueryResults.GuildRankTabPermissions tab = new();
+            tab.Flags = packet.ReadInt32();
+            tab.WithdrawItemLimit = packet.ReadInt32();
+            results.Tab.Add(tab);
+        }
+
+        SendPacketToClient(results);
+    }
+
     [PacketHandler(Opcode.SMSG_GUILD_ROSTER)]
     void HandleGuildRoster(WorldPacket packet)
     {

@@ -153,6 +153,41 @@ public class GuildPermissionsQuery : ClientPacket
     public override void Read() { }
 }
 
+public class GuildPermissionsQueryResults : ServerPacket
+{
+    public GuildPermissionsQueryResults()
+        : base(Opcode.SMSG_GUILD_PERMISSIONS_QUERY_RESULTS, ConnectionType.Realm)
+    {
+    }
+
+    public override void Write()
+    {
+        _worldPacket.WriteUInt32(RankID);
+        _worldPacket.WriteInt32(Flags);
+        _worldPacket.WriteInt32(WithdrawGoldLimit);
+        _worldPacket.WriteInt32(NumTabs);
+        _worldPacket.WriteUInt32((uint)Tab.Count);
+
+        foreach (var tab in Tab)
+        {
+            _worldPacket.WriteInt32(tab.Flags);
+            _worldPacket.WriteInt32(tab.WithdrawItemLimit);
+        }
+    }
+
+    public uint RankID;
+    public int Flags;
+    public int WithdrawGoldLimit;
+    public int NumTabs;
+    public List<GuildRankTabPermissions> Tab = new();
+
+    public class GuildRankTabPermissions
+    {
+        public int Flags;
+        public int WithdrawItemLimit;
+    }
+}
+
 public class GuildBankRemainingWithdrawMoneyQuery : ClientPacket
 {
     public GuildBankRemainingWithdrawMoneyQuery(WorldPacket packet) : base(packet) { }
