@@ -38,7 +38,7 @@ GitHub forks do not copy upstream Issues into the fork. Our fork has the code an
 | Priority | Source | Issue | Backend | Branch name | Status / first check |
 |---|---|---|---|---|---|
 | P0 | [#105](https://github.com/Xian55/HermesProxy/issues/105) | `SMSG_SPELL_GO` parse over-read recurring combat disconnect | AzerothCore / TrinityCore | `fix/issue-105-spell-go-overread` | Reproduce in combat and inspect spell target/effect read boundaries. |
-| P0 | [#103](https://github.com/Xian55/HermesProxy/issues/103) | Solo Dungeon Finder crashes proxy; roles not working | AzerothCore | `fix/issue-103-acore-df-roles` | Compare against current LFG handler and old fork LFG fixes. |
+| P1 | [#103](https://github.com/Xian55/HermesProxy/issues/103) | Solo Dungeon Finder proposal/entry path | AzerothCore | `fix/issue-lfg-proposal-double-rideticket-bit` | 2026-06-17: proposal accept and Deadmines entry verified after removing duplicate `RideTicket` bit consume. Keep watching role edge cases and post-entry LFG status packets. |
 | P0 | [#104](https://github.com/Xian55/HermesProxy/issues/104) | Dungeon Finder appears to pass through | cMangos | `fix/issue-104-cmangos-df` | Check cMangos opcode/layout differences after TC LFG path. |
 | P1 | [#106](https://github.com/Xian55/HermesProxy/issues/106) | BG scoreboard empty; no end-of-match popup | TrinityCore | `fix/issue-106-bg-scoreboard` | `MSG_PVP_LOG_DATA` is reportedly dropped to `MSG_NULL_ACTION`; inspect opcode table and handler path. |
 | P1 | [#107](https://github.com/Xian55/HermesProxy/issues/107) | BG party/raid members show Unknown/offline/Dead out of range | TrinityCore | `fix/issue-107-bg-raid-members` | Inspect party/member status packets during bot-filled BG. |
