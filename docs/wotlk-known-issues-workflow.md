@@ -53,7 +53,7 @@ GitHub forks do not copy upstream Issues into the fork. Our fork has the code an
 | P2 | `wotlk.md` | cMangos vendor sell leaves grey permanent item | cMangos | `fix/cmangos-vendor-sell` | Buy works; inspect sell response and inventory slot update. |
 | P2 | `wotlk.md` | cMangos inventory on-use items do not trigger | cMangos | `fix/cmangos-use-item` | Food/bandages/potions do not fire; likely legacy `CMSG_USE_ITEM` layout difference. |
 | Done | 2026-06-17 log | Legacy `SMSG_DISMOUNT` is unhandled | AzerothCore | `fix/wotlk-smsg-dismount` | Fixed by translating the empty legacy dismount event to modern `SMSG_DISMOUNT`; latest test log has no remaining `SMSG_DISMOUNT` warnings. |
-| P2 | 2026-06-17 log | Legacy `SMSG_MOVE_SET_COLLISION_HGT` is unhandled | AzerothCore | `fix/wotlk-move-collision-height` | Appeared 6 times in the post-dismount test log; likely related to mount/dismount or model collision-height updates. |
+| Done | 2026-06-17 log | Legacy `SMSG_MOVE_SET_COLLISION_HGT` is unhandled | AzerothCore | `fix/wotlk-move-collision-height` | Latest test log has no remaining `SMSG_MOVE_SET_COLLISION_HGT` warnings; branch also maps V3_4_3 `CMSG_MOVE_SET_COLLISION_HEIGHT_ACK` (`0x3A3B`) so client ACKs do not fall through as `MSG_NULL_ACTION`. |
 | P2 | 2026-06-17 log | Legacy `SMSG_SPELL_EXECUTE_LOG` is unhandled | AzerothCore | `fix/wotlk-spell-execute-log` | Seen during gameplay; may affect combat log or spell effect feedback. |
 | P3 | `wotlk.md` | Warlock soulshard item add can disconnect | TC carryover | `fix/wotlk-warlock-soulshard-item` | Re-verify first; old class matrix predates many item descriptor fixes. |
 | P3 | `wotlk.md` | Paladin greater blessings report already learned | TC carryover | `fix/wotlk-greater-blessing-learn` | Re-verify first; likely spell-learn dedup translation. |
@@ -62,6 +62,9 @@ GitHub forks do not copy upstream Issues into the fork. Our fork has the code an
 | P3 | 2026-06-17 log | `CMSG_GUILD_SET_ACHIEVEMENT_TRACKING` is unhandled | 3.4.3 client | `fix/wotlk-guild-achievement-tracking` | Guild roster names are fixed; this is a separate guild-achievement tracking request. |
 | P3 | 2026-06-17 log | `SMSG_LFG_UPDATE_SEARCH` is unhandled | AzerothCore | `fix/wotlk-lfg-update-search` | Appears while testing; track after the proposal/teleport path is verified. |
 | P3 | 2026-06-17 log | `SMSG_INSTANCE_DIFFICULTY`, `SMSG_LOAD_EQUIPMENT_SET`, `SMSG_LEARNED_DANCE_MOVES` are still unhandled | AzerothCore | `fix/wotlk-misc-state-opcodes` | Already noted in `wotlk.md`; latest logs confirm they still occur. |
+| P3 | 2026-06-17 log | `SMSG_CACHE_VERSION` is unhandled | AzerothCore | `fix/wotlk-cache-version` | Seen once at login in the latest logs; likely map to/replace modern cache-version flow or ignore deliberately after confirming layout. |
+| P3 | 2026-06-17 log | Modern client account/store/service startup CMSGs are unhandled | 3.4.3 client | `fix/wotlk-modern-startup-cmsg-noops` | Latest log repeats BattlePay/VAS/undelete/pet journal/calendar/ticket/pvp/cemetery startup requests. Likely safe no-op handlers, but track explicitly. |
+| P3 | 2026-06-17 log | Modern client telemetry/reporting CMSGs are unhandled | 3.4.3 client | `fix/wotlk-modern-telemetry-noops` | `CMSG_REPORT_CLIENT_VARIABLES`, `CMSG_REPORT_ENABLED_ADDONS`, and `CMSG_REPORT_KEYBINDING_EXECUTION_COUNTS` appear on logout/disconnect path; likely safe no-op handlers. |
 
 ## Upstream Issues To Track
 
