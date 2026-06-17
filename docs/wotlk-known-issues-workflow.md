@@ -43,10 +43,11 @@ GitHub forks do not copy upstream Issues into the fork. Our fork has the code an
 | P1 | [#106](https://github.com/Xian55/HermesProxy/issues/106) | BG scoreboard empty; no end-of-match popup | TrinityCore | `fix/issue-106-bg-scoreboard` | `MSG_PVP_LOG_DATA` is reportedly dropped to `MSG_NULL_ACTION`; inspect opcode table and handler path. |
 | P1 | [#107](https://github.com/Xian55/HermesProxy/issues/107) | BG party/raid members show Unknown/offline/Dead out of range | TrinityCore | `fix/issue-107-bg-raid-members` | Inspect party/member status packets during bot-filled BG. |
 | P1 | [#96](https://github.com/Xian55/HermesProxy/issues/96) / [#101](https://github.com/Xian55/HermesProxy/issues/101) | Transport / MOTransport crashes or is filtered | AzerothCore / cMangos | `fix/wotlk-motransport` | `wotlk.md` says zeppelins/elevators remain filtered and untested/broken. |
-| P1 | 2026-06-17 log / old fork | LFG dungeon refill/search state missing after member kick or uninvite | AzerothCore | `fix/wotlk-lfg-update-search` | Latest test dropped legacy `SMSG_LFG_UPDATE_SEARCH` (opcode 873) after LFG dungeon member changes. Old client would prompt/search for a replacement; V3_4_3 UI stayed in an inconsistent eye-menu state. Old fork has a candidate handler that maps this into `SMSG_LFG_UPDATE_STATUS`. |
+| P1 | 2026-06-17 log / old fork | LFG dungeon refill/search state missing after member kick or uninvite | AzerothCore | `fix/wotlk-lfg-update-search` | Branch implements legacy `SMSG_LFG_UPDATE_SEARCH` by mapping it into modern `SMSG_LFG_UPDATE_STATUS`; needs member-removal/refill retest. |
 | P2 | `wotlk.md` | Sporadic `CMSG_LOG_DISCONNECT(reason=7)` under load | TC / unknown | `fix/wotlk-reason-7-diagnostics` | Existing ring-buffer logs may need expansion around current repro. |
 | P2 | `wotlk.md` | Action Bar 2/3/4/5 visibility checkboxes do not persist | Client account data | `fix/wotlk-edit-mode-account-data` | Needs V3_4_3 Edit Mode account-data capture; legacy CVars are ignored. |
 | P2 | `wotlk.md` | Ground-target persistent AOE visual missing after successful cast | TC | `fix/wotlk-dynamicobject-aoe-visual` | DnD cast works, but ground swirl does not render; suspect `DynamicObject` or spell visual packet. |
+| P2 | 2026-06-17 user report | Taxi flight movement feels jerky at path point transitions | AzerothCore | `fix/wotlk-taxi-spline-smoothing` | User observed visible hard steering between taxi path coordinates compared with old client. Inspect `SMSG_MONSTER_MOVE` spline flags/timing for taxi flights; try with `HERMES_TRACE_MOVEMENT` enabled and compare against old-client/native Wrathion movement. |
 | P2 | `wotlk.md` | Pet spellbook "Pet" tab missing/broken | TC | `fix/wotlk-pet-spellbook-tab` | Prior native diff matched obvious fields; needs fresh capture or different UI data path. |
 | P2 | 2026-06-17 log | Legacy `SMSG_LOOT_LIST` is unhandled during dungeon looting | AzerothCore | `fix/wotlk-loot-list` | Hunter/pet dungeon run logged 11 drops of legacy opcode 1017. There is a modern `LootList` packet class but no legacy client handler yet; verify whether this affects loot roll/list UI. |
 | P2 | `wotlk.md` | Random suffix stats missing from item tooltip | TC | `fix/wotlk-random-suffix-tooltip` | Stats apply but tooltip omits suffix bonuses. |
@@ -122,6 +123,13 @@ Before fixing a WotLK issue, check `docs/local-old-fork-comparison.md`. Several 
 - Follow-up hunter/pet dungeon log `build/Logs/hermes-20260617_134225.log` also shows `SMSG_LFG_UPDATE_SEARCH` unhandled at 13:50:07.
 - TrinityCore 3.3.5 `SendLfgLfrList` writes `SMSG_LFG_UPDATE_SEARCH` as a one-byte search/update flag. Current Xian55 handler covers `SMSG_LFG_UPDATE_PLAYER` and `SMSG_LFG_UPDATE_PARTY`, but not `SMSG_LFG_UPDATE_SEARCH`.
 - `HermesProxy-WOTLK-fork` has a candidate `HandleLfgUpdateSearch` that feeds the same modern `DFUpdateStatus` path as player/party updates. Port this on a dedicated `fix/wotlk-lfg-update-search` branch, then retest the member-removal/refill flow.
+- `fix/wotlk-lfg-update-search` adds a handler for `SMSG_LFG_UPDATE_SEARCH` and routes player/party/search LFG updates through a guarded status writer so the one-byte search payload does not over-read.
+
+### Taxi Flight Smoothness Notes
+
+- 2026-06-17 user report: taxi movement on the V3_4_3 client feels more visibly segmented than the old client, with hard steering when new path coordinates appear.
+- This is likely separate from the already-fixed flightmaster window mask issue. Start with `HermesProxy/World/Client/PacketHandlers/MovementHandler.cs` taxi-flight spline handling (`SMSG_MONSTER_MOVE`), especially CatmullRom/Flying flags, movement duration, and point emission.
+- For a future repro, launch with `HERMES_TRACE_MOVEMENT=1`, take the same flight path on old client and V3_4_3, and compare `[MonsterMove/In]` / modern spline output around taxi waypoints.
 
 ### Latest Log Findings
 

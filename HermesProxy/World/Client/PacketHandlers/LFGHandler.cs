@@ -73,16 +73,28 @@ public partial class WorldClient
     [PacketHandler(Opcode.SMSG_LFG_UPDATE_PLAYER)]
     void HandleLFGUpdatePlayer(WorldPacket packet)
     {
-        WriteUpdateStatus(packet, isParty: false);
+        WriteUpdateStatus(packet, isParty: false, nameof(Opcode.SMSG_LFG_UPDATE_PLAYER));
     }
 
     [PacketHandler(Opcode.SMSG_LFG_UPDATE_PARTY)]
     void HandleLFGUpdateParty(WorldPacket packet)
     {
-        WriteUpdateStatus(packet, isParty: true);
+        WriteUpdateStatus(packet, isParty: true, nameof(Opcode.SMSG_LFG_UPDATE_PARTY));
     }
 
-    private void WriteUpdateStatus(WorldPacket packet, bool isParty)
+    [PacketHandler(Opcode.SMSG_LFG_UPDATE_SEARCH)]
+    void HandleLFGUpdateSearch(WorldPacket packet)
+    {
+        WriteUpdateStatus(packet, isParty: false, nameof(Opcode.SMSG_LFG_UPDATE_SEARCH));
+    }
+
+    private void WriteUpdateStatus(WorldPacket packet, bool isParty, string sourceOpcode)
+    {
+        WriteUpdateStatusSafe(packet, isParty, sourceOpcode);
+        return;
+    }
+
+    private void WriteUpdateStatusLegacy(WorldPacket packet, bool isParty, string sourceOpcode)
     {
         DFUpdateStatus status = new DFUpdateStatus();
         status.Ticket = MakeLfgTicket();
@@ -103,6 +115,58 @@ public partial class WorldClient
             status.NotifyUI = true;
             packet.ReadCString(); // comment — unused in modern
         }
+        SendPacketToClient(status);
+    }
+
+    private void WriteUpdateStatusSafe(WorldPacket packet, bool isParty, string sourceOpcode)
+    {
+        DFUpdateStatus status = new DFUpdateStatus();
+        status.Ticket = MakeLfgTicket();
+        status.IsParty = isParty;
+        status.NotifyUI = true;
+
+        if (!packet.CanRead())
+        {
+            Log.Print(LogType.Debug, $"[LFG] {sourceOpcode} had no payload; sent empty update status");
+            SendPacketToClient(status);
+            return;
+        }
+
+        status.SubType = packet.ReadUInt8();
+
+        bool hasExtraInfo = packet.CanRead() && packet.ReadUInt8() != 0;
+        if (hasExtraInfo)
+        {
+            status.Queued = packet.CanRead() && packet.ReadUInt8() != 0;
+            if (packet.CanRead())
+                packet.ReadUInt8(); // unk
+            if (packet.CanRead())
+                packet.ReadUInt8(); // unk
+
+            byte dungeonCount = packet.CanRead() ? packet.ReadUInt8() : (byte)0;
+            for (int i = 0; i < dungeonCount; i++)
+            {
+                if (!packet.CanRead(4))
+                    break;
+                status.Slots.Add(packet.ReadUInt32());
+            }
+
+            status.Joined = true;
+            status.LfgJoined = true;
+
+            if (packet.CanRead())
+                packet.ReadToEnd(); // comment - unused in modern
+        }
+        else if (packet.CanRead())
+        {
+            status.Queued = packet.ReadUInt8() != 0;
+            status.Joined = status.Queued;
+            status.LfgJoined = status.Queued;
+            packet.ReadToEnd();
+        }
+
+        Log.Print(LogType.Debug,
+            $"[LFG] {sourceOpcode} -> UPDATE_STATUS subtype={status.SubType} party={status.IsParty} queued={status.Queued} joined={status.Joined} slots={status.Slots.Count}");
         SendPacketToClient(status);
     }
 
