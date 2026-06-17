@@ -344,7 +344,8 @@ public partial class WorldClient
             return;
 
         SpellStart spell = new SpellStart();
-        spell.Cast = HandleSpellStartOrGo(packet, false);
+        if (!TryHandleSpellStartOrGo(packet, false, out spell.Cast))
+            return;
 
         // Mark pending cast as started (queue-based, FIFO order)
         if (GetSession().GameState.CurrentPlayerGuid == spell.Cast.CasterUnit &&
@@ -403,7 +404,8 @@ public partial class WorldClient
             return;
 
         SpellGo spell = new SpellGo();
-        spell.Cast = HandleSpellStartOrGo(packet, true);
+        if (!TryHandleSpellStartOrGo(packet, true, out spell.Cast))
+            return;
 
         // 3.3.5a SpellGo doesn't set HasTrajectory but the V3_4_3 client requires it
         // on SpellGo (not SpellStart) to render projectile/missile visuals.
@@ -488,9 +490,11 @@ public partial class WorldClient
         SendPacketToClient(spell);
     }
 
-    SpellCastData HandleSpellStartOrGo(WorldPacket packet, bool isSpellGo)
+    private static int s_spellGoMalformedDumpBudget = 3;
+
+    bool TryHandleSpellStartOrGo(WorldPacket packet, bool isSpellGo, out SpellCastData dbdata)
     {
-        SpellCastData dbdata = new SpellCastData();
+        dbdata = new SpellCastData();
 
         dbdata.CasterGUID = packet.ReadPackedGuid().To128(GetSession().GameState);
         dbdata.CasterUnit = packet.ReadPackedGuid().To128(GetSession().GameState);
@@ -521,25 +525,8 @@ public partial class WorldClient
 
         if (isSpellGo)
         {
-            var hitCount = packet.ReadUInt8();
-            for (var i = 0; i < hitCount; i++)
-            {
-                WowGuid128 hitTarget = packet.ReadGuid().To128(GetSession().GameState);
-                dbdata.HitTargets.Add(hitTarget);
-            }
-
-            var missCount = packet.ReadUInt8();
-            for (var i = 0; i < missCount; i++)
-            {
-                WowGuid128 missTarget = packet.ReadGuid().To128(GetSession().GameState);
-                SpellMissInfo missType = (SpellMissInfo)packet.ReadUInt8();
-                SpellMissInfo reflectType = SpellMissInfo.None;
-                if (missType == SpellMissInfo.Reflect)
-                    reflectType = (SpellMissInfo)packet.ReadUInt8();
-
-                dbdata.MissTargets.Add(missTarget);
-                dbdata.MissStatus.Add(new SpellMissStatus(missType, reflectType));
-            }
+            if (!TryReadLegacySpellGoTargets(packet, dbdata))
+                return false;
         }
 
         var targetFlags = LegacyVersion.AddedInVersion(ClientVersionBuild.V2_0_1_6180) ?
@@ -725,7 +712,66 @@ public partial class WorldClient
             }
         }
 
-        return dbdata;
+        return true;
+    }
+
+    bool TryReadLegacySpellGoTargets(WorldPacket packet, SpellCastData dbdata)
+    {
+        const int GuidBytes = 8;
+        const int MissTargetMinBytes = GuidBytes + 1;
+
+        if (!packet.CanRead(1))
+            return WarnMalformedSpellGoTargets(packet, dbdata, "hitCount", 1);
+
+        var hitCount = packet.ReadUInt8();
+        int hitBytes = hitCount * GuidBytes;
+        if (!packet.CanRead(hitBytes + 1))
+            return WarnMalformedSpellGoTargets(packet, dbdata, "hitTargets+missCount", hitBytes + 1);
+
+        for (var i = 0; i < hitCount; i++)
+        {
+            WowGuid128 hitTarget = packet.ReadGuid().To128(GetSession().GameState);
+            dbdata.HitTargets.Add(hitTarget);
+        }
+
+        var missCount = packet.ReadUInt8();
+        int missBytes = missCount * MissTargetMinBytes;
+        if (!packet.CanRead(missBytes))
+            return WarnMalformedSpellGoTargets(packet, dbdata, "missTargets", missBytes);
+
+        for (var i = 0; i < missCount; i++)
+        {
+            WowGuid128 missTarget = packet.ReadGuid().To128(GetSession().GameState);
+            SpellMissInfo missType = (SpellMissInfo)packet.ReadUInt8();
+            SpellMissInfo reflectType = SpellMissInfo.None;
+            if (missType == SpellMissInfo.Reflect)
+            {
+                if (!packet.CanRead(1))
+                    return WarnMalformedSpellGoTargets(packet, dbdata, "reflectMissType", 1);
+                reflectType = (SpellMissInfo)packet.ReadUInt8();
+            }
+
+            dbdata.MissTargets.Add(missTarget);
+            dbdata.MissStatus.Add(new SpellMissStatus(missType, reflectType));
+        }
+
+        return true;
+    }
+
+    bool WarnMalformedSpellGoTargets(WorldPacket packet, SpellCastData dbdata, string field, int needed)
+    {
+        int remainingBudget = System.Threading.Interlocked.Decrement(ref s_spellGoMalformedDumpBudget);
+        if (remainingBudget >= 0)
+        {
+            byte[] all = packet.GetData();
+            int len = (int)packet.GetSize();
+            int dumpLen = Math.Min(192, len);
+            string hex = BitConverter.ToString(all, 0, dumpLen);
+            Log.Print(LogType.Warn,
+                $"SMSG_SPELL_GO malformed target block at field={field}: spell={dbdata.SpellID} flags=0x{dbdata.CastFlags:X8} need {needed} bytes, have {packet.Remaining()} (size={len}). Dropping packet to keep world session alive. hex={hex}");
+        }
+
+        return false;
     }
 
     [PacketHandler(Opcode.SMSG_CANCEL_AUTO_REPEAT)]
