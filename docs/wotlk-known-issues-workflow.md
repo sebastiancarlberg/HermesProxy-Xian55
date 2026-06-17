@@ -52,10 +52,15 @@ GitHub forks do not copy upstream Issues into the fork. Our fork has the code an
 | P2 | `wotlk.md` | cMangos quest log state desync after pickup | cMangos | `fix/cmangos-quest-log-refresh` | Quest tracker/map update live; log list refreshes after relog. |
 | P2 | `wotlk.md` | cMangos vendor sell leaves grey permanent item | cMangos | `fix/cmangos-vendor-sell` | Buy works; inspect sell response and inventory slot update. |
 | P2 | `wotlk.md` | cMangos inventory on-use items do not trigger | cMangos | `fix/cmangos-use-item` | Food/bandages/potions do not fire; likely legacy `CMSG_USE_ITEM` layout difference. |
+| P2 | 2026-06-17 log | Legacy `SMSG_DISMOUNT` is unhandled | AzerothCore / TC unknown | `fix/wotlk-smsg-dismount` | Repeated while testing; old fork commit `838ffcc` may already have the conversion. |
+| P2 | 2026-06-17 log | Legacy `SMSG_SPELL_EXECUTE_LOG` is unhandled | AzerothCore | `fix/wotlk-spell-execute-log` | Seen during gameplay; may affect combat log or spell effect feedback. |
 | P3 | `wotlk.md` | Warlock soulshard item add can disconnect | TC carryover | `fix/wotlk-warlock-soulshard-item` | Re-verify first; old class matrix predates many item descriptor fixes. |
 | P3 | `wotlk.md` | Paladin greater blessings report already learned | TC carryover | `fix/wotlk-greater-blessing-learn` | Re-verify first; likely spell-learn dedup translation. |
 | P3 | `wotlk.md` | Shaman weapon imbues report already enchanted | TC carryover | `fix/wotlk-shaman-imbues` | Re-verify first; likely enchant item CMSG path. |
 | P3 | `wotlk.md` | Holy Wrath / Holy Shock animate but have no damage/heal | TC carryover | `fix/wotlk-holy-spell-effects` | Re-verify first; suspect `SMSG_SPELL_GO` effect payload. |
+| P3 | 2026-06-17 log | `CMSG_GUILD_SET_ACHIEVEMENT_TRACKING` is unhandled | 3.4.3 client | `fix/wotlk-guild-achievement-tracking` | Guild roster names are fixed; this is a separate guild-achievement tracking request. |
+| P3 | 2026-06-17 log | `SMSG_LFG_UPDATE_SEARCH` is unhandled | AzerothCore | `fix/wotlk-lfg-update-search` | Appears while testing; track after the proposal/teleport path is verified. |
+| P3 | 2026-06-17 log | `SMSG_INSTANCE_DIFFICULTY`, `SMSG_LOAD_EQUIPMENT_SET`, `SMSG_LEARNED_DANCE_MOVES` are still unhandled | AzerothCore | `fix/wotlk-misc-state-opcodes` | Already noted in `wotlk.md`; latest logs confirm they still occur. |
 
 ## Upstream Issues To Track
 
@@ -95,4 +100,3 @@ Before fixing a WotLK issue, check `docs/local-old-fork-comparison.md`. Several 
 - `098a338` - map pet power regen to modern slots.
 - `13d6217` - defer opening spell until game object target.
 - `be3edd4` - handle party join update requests.
-
