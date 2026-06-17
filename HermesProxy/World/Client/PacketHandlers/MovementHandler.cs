@@ -86,6 +86,12 @@ public partial class WorldClient
         SendPacketToClient(knockback);
     }
 
+    [PacketHandler(Opcode.SMSG_DISMOUNT)]
+    void HandleDismount(WorldPacket packet)
+    {
+        SendPacketToClient(new Dismount());
+    }
+
     [PacketHandler(Opcode.SMSG_CONTROL_UPDATE)]
     void HandleControlUpdate(WorldPacket packet)
     {
