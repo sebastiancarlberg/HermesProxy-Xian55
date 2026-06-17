@@ -871,6 +871,13 @@ public class MoveSetActiveMover : ServerPacket
     public WowGuid128 MoverGUID;
 }
 
+public class Dismount : ServerPacket
+{
+    public Dismount() : base(Opcode.SMSG_DISMOUNT, ConnectionType.Instance) { }
+
+    public override void Write() { }
+}
+
 public class PhaseShiftChange : ServerPacket
 {
     public PhaseShiftChange() : base(Opcode.SMSG_PHASE_SHIFT_CHANGE, ConnectionType.Instance) { }
