@@ -52,7 +52,8 @@ GitHub forks do not copy upstream Issues into the fork. Our fork has the code an
 | P2 | `wotlk.md` | cMangos quest log state desync after pickup | cMangos | `fix/cmangos-quest-log-refresh` | Quest tracker/map update live; log list refreshes after relog. |
 | P2 | `wotlk.md` | cMangos vendor sell leaves grey permanent item | cMangos | `fix/cmangos-vendor-sell` | Buy works; inspect sell response and inventory slot update. |
 | P2 | `wotlk.md` | cMangos inventory on-use items do not trigger | cMangos | `fix/cmangos-use-item` | Food/bandages/potions do not fire; likely legacy `CMSG_USE_ITEM` layout difference. |
-| P2 | 2026-06-17 log | Legacy `SMSG_DISMOUNT` is unhandled | AzerothCore / TC unknown | `fix/wotlk-smsg-dismount` | Repeated while testing; old fork commit `838ffcc` may already have the conversion. |
+| Done | 2026-06-17 log | Legacy `SMSG_DISMOUNT` is unhandled | AzerothCore | `fix/wotlk-smsg-dismount` | Fixed by translating the empty legacy dismount event to modern `SMSG_DISMOUNT`; latest test log has no remaining `SMSG_DISMOUNT` warnings. |
+| P2 | 2026-06-17 log | Legacy `SMSG_MOVE_SET_COLLISION_HGT` is unhandled | AzerothCore | `fix/wotlk-move-collision-height` | Appeared 6 times in the post-dismount test log; likely related to mount/dismount or model collision-height updates. |
 | P2 | 2026-06-17 log | Legacy `SMSG_SPELL_EXECUTE_LOG` is unhandled | AzerothCore | `fix/wotlk-spell-execute-log` | Seen during gameplay; may affect combat log or spell effect feedback. |
 | P3 | `wotlk.md` | Warlock soulshard item add can disconnect | TC carryover | `fix/wotlk-warlock-soulshard-item` | Re-verify first; old class matrix predates many item descriptor fixes. |
 | P3 | `wotlk.md` | Paladin greater blessings report already learned | TC carryover | `fix/wotlk-greater-blessing-learn` | Re-verify first; likely spell-learn dedup translation. |
